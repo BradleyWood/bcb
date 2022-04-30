@@ -32,9 +32,11 @@ public @Data class BCBMethod {
     @Builder.Default
     private final Type returnType = Type.VOID_TYPE;
 
-    private final String declaringClass;
+    @Builder.Default
+    private final String declaringClass = "AnonymousClass";
 
-    private final String name;
+    @Builder.Default
+    private final String name = "anonymousMethod";
 
     @Builder.Default
     private final int modifiers = ACC_PUBLIC + ACC_STATIC;
@@ -112,6 +114,18 @@ public @Data class BCBMethod {
         };
 
         return loader.loadClass(declaringClass.replace("/", "."));
+    }
+
+    @SneakyThrows
+    public void save() {
+        saveToFolder(new File("."));
+    }
+
+    @SneakyThrows
+    public void saveToFolder(final File file) {
+        final FileOutputStream fos = new FileOutputStream(new File(file, String.format("%s.class", getDeclaringClass())));
+        saveToFile(fos);
+        fos.close();
     }
 
     @SneakyThrows
