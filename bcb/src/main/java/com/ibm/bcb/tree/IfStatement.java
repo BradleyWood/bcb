@@ -28,7 +28,7 @@ public class IfStatement implements Statement {
 
         final Label elseLabel = new Label();
 
-        if (conditionType.equals(Type.BYTE_TYPE) || conditionType.equals(Type.SHORT_TYPE) || conditionType.equals(Type.INT_TYPE)) {
+        if (conditionType.equals(Type.BOOLEAN_TYPE) || conditionType.equals(Type.BYTE_TYPE) || conditionType.equals(Type.SHORT_TYPE) || conditionType.equals(Type.INT_TYPE)) {
             mv.visitJumpInsn(IFEQ, elseLabel);
         } else {
             mv.visitJumpInsn(IFNULL, elseLabel);

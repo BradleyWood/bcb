@@ -4,8 +4,11 @@ import com.ibm.bcb.Operator;
 import com.ibm.bcb.Primitive;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+
+import static org.objectweb.asm.Opcodes.*;
 
 @EqualsAndHashCode
 @Data(staticConstructor = "of")
@@ -42,16 +45,43 @@ public class BinaryExpression implements Expression {
             throw new IllegalArgumentException("No such operator!");
         }
 
-        lhs.evaluate(ctx, mv);
-        final Primitive lhsHandler = Primitive.getPrimitive(lhsType);
         final Primitive resultHandler = Primitive.getPrimitive(resultType);
-        lhsHandler.cast(mv, resultHandler);
-
-        rhs.evaluate(ctx, mv);
+        final Primitive lhsHandler = Primitive.getPrimitive(lhsType);
         final Primitive rhsHandler = Primitive.getPrimitive(rhsType);
-        rhsHandler.cast(mv, resultHandler);
 
-        operator.evaluate(mv);
+        if (operator.isCompareInstruction()) {
+            final Operator conversionTrick = Operator.findOperator("+", lhsType, rhsType);
+            final Label elseLabel = new Label();
+            final Label doneLabel = new Label();
+
+            if (conversionTrick != null) {
+                final Primitive typesToCompare = Primitive.getPrimitive(conversionTrick.getResultType());
+                lhs.evaluate(ctx, mv);
+                lhsHandler.cast(mv, typesToCompare);
+
+                rhs.evaluate(ctx, mv);
+                rhsHandler.cast(mv, typesToCompare);
+
+                operator.evaluate(elseLabel, mv);
+
+                mv.visitInsn(ICONST_1);
+                mv.visitJumpInsn(GOTO, doneLabel);
+            } else {
+                throw new UnsupportedOperationException("Reference comparisons not supported");
+            }
+
+            mv.visitLabel(elseLabel);
+            mv.visitInsn(ICONST_0);
+            mv.visitLabel(doneLabel);
+        } else {
+            lhs.evaluate(ctx, mv);
+            lhsHandler.cast(mv, resultHandler);
+
+            rhs.evaluate(ctx, mv);
+            rhsHandler.cast(mv, resultHandler);
+
+            operator.evaluate(mv);
+        }
 
         return resultType;
     }

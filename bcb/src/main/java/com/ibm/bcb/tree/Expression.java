@@ -10,16 +10,36 @@ public interface Expression extends Statement {
         return bop("+", rhs);
     }
 
-    default Expression sub(Expression rhs) {
+    default Expression sub(final Expression rhs) {
         return bop("-", rhs);
     }
 
-    default Expression mul(Expression rhs) {
+    default Expression mul(final Expression rhs) {
         return bop("*", rhs);
     }
 
-    default Expression div(Expression rhs) {
+    default Expression div(final Expression rhs) {
         return bop("/", rhs);
+    }
+
+    default Expression eq(final Expression rhs) {
+        return bop("==", rhs);
+    }
+
+    default Expression gt(final Expression rhs) {
+        return bop(">", rhs);
+    }
+
+    default Expression gte(final Expression rhs) {
+        return bop(">=", rhs);
+    }
+
+    default Expression lt(final Expression rhs) {
+        return bop("<", rhs);
+    }
+
+    default Expression lte(final Expression rhs) {
+        return bop("<=", rhs);
     }
 
     default Expression bop(final String operation, final Expression rhs) {
