@@ -122,31 +122,31 @@ public class BCB {
     }
 
     public static Expression toInt(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.INT_TYPE);
     }
 
     public static Expression toLong(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.LONG_TYPE);
     }
 
     public static Expression toFloat(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.FLOAT_TYPE);
     }
 
     public static Expression toDouble(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.DOUBLE_TYPE);
     }
 
     public static Expression toShort(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.SHORT_TYPE);
     }
 
     public static Expression toByte(Expression expression) {
-        throw new UnsupportedOperationException();
+        return cast(expression, Type.BYTE_TYPE);
     }
 
     public static Expression cast(Expression expression, Type type) {
-        throw new UnsupportedOperationException();
+        return CastExpression.of(expression, type);
     }
 
     public static Expression unaryOp(String opcode, Expression expression) {

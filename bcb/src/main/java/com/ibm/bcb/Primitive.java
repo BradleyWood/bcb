@@ -10,13 +10,13 @@ import static org.objectweb.asm.Opcodes.*;
 public enum Primitive {
 
     INT(Type.INT_TYPE, Type.getType(Integer.class), I2B, I2S, NOP, I2L, I2F, I2D, ILOAD, ISTORE, IALOAD, IASTORE, IRETURN, DUP, POP),
-    BYTE(Type.BYTE_TYPE, Type.getType(Integer.class), NOP, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, BALOAD, BALOAD, IRETURN, DUP, POP),
-    CHAR(Type.CHAR_TYPE, Type.getType(Integer.class), I2B, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, CALOAD, CASTORE, IRETURN, DUP, POP),
-    LONG(Type.LONG_TYPE, Type.getType(Integer.class), -1, -1, L2I, L2D, L2F, NOP, LLOAD, LSTORE, LALOAD, LASTORE, LRETURN, DUP2, POP2),
-    SHORT(Type.SHORT_TYPE, Type.getType(Integer.class), I2B, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, SALOAD, SASTORE, IRETURN, DUP, POP),
-    FLOAT(Type.FLOAT_TYPE, Type.getType(Integer.class), -1, -1, F2I, F2L, NOP, F2D, FLOAD, FSTORE, FALOAD, FASTORE, FRETURN, DUP, POP),
-    DOUBLE(Type.DOUBLE_TYPE, Type.getType(Integer.class), -1, -1, D2I, D2L, D2F, NOP, DLOAD, DSTORE, DALOAD, DASTORE, DRETURN, DUP2, POP2),
-    BOOLEAN(Type.BOOLEAN_TYPE, Type.getType(Integer.class), I2B, I2S, NOP, I2L, I2F, I2D, ILOAD, ISTORE, BALOAD, BASTORE, IRETURN, DUP, POP);
+    BYTE(Type.BYTE_TYPE, Type.getType(Byte.class), NOP, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, BALOAD, BALOAD, IRETURN, DUP, POP),
+    CHAR(Type.CHAR_TYPE, Type.getType(Character.class), I2B, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, CALOAD, CASTORE, IRETURN, DUP, POP),
+    LONG(Type.LONG_TYPE, Type.getType(Long.class), -1, -1, L2I, L2D, L2F, L2D, LLOAD, LSTORE, LALOAD, LASTORE, LRETURN, DUP2, POP2),
+    SHORT(Type.SHORT_TYPE, Type.getType(Short.class), I2B, NOP, NOP, I2L, I2F, I2D, ILOAD, ISTORE, SALOAD, SASTORE, IRETURN, DUP, POP),
+    FLOAT(Type.FLOAT_TYPE, Type.getType(Float.class), -1, -1, F2I, F2L, NOP, F2D, FLOAD, FSTORE, FALOAD, FASTORE, FRETURN, DUP, POP),
+    DOUBLE(Type.DOUBLE_TYPE, Type.getType(Double.class), -1, -1, D2I, D2L, D2F, NOP, DLOAD, DSTORE, DALOAD, DASTORE, DRETURN, DUP2, POP2),
+    BOOLEAN(Type.BOOLEAN_TYPE, Type.getType(Boolean.class), I2B, I2S, NOP, I2L, I2F, I2D, ILOAD, ISTORE, BALOAD, BASTORE, IRETURN, DUP, POP);
 
     private final Type primitive;
     private final Type boxed;
@@ -116,7 +116,7 @@ public enum Primitive {
     }
 
     public void box(final MethodVisitor mv) {
-        mv.visitMethodInsn(INVOKEVIRTUAL, boxed.getInternalName(), "valueOf", Type.getMethodType(boxed, primitive).getDescriptor(), false);
+        mv.visitMethodInsn(INVOKESTATIC, boxed.getInternalName(), "valueOf", Type.getMethodType(boxed, primitive).getDescriptor(), false);
     }
 
     public void pop(final MethodVisitor mv) {

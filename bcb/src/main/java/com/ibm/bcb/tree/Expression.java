@@ -42,6 +42,34 @@ public interface Expression extends Statement {
         return bop("<=", rhs);
     }
 
+    default Expression toByte() {
+        return cast(Type.BYTE_TYPE);
+    }
+
+    default Expression toShort() {
+        return cast(Type.SHORT_TYPE);
+    }
+
+    default Expression toInt() {
+        return cast(Type.INT_TYPE);
+    }
+
+    default Expression toLong() {
+        return cast(Type.LONG_TYPE);
+    }
+
+    default Expression toFloat() {
+        return cast(Type.FLOAT_TYPE);
+    }
+
+    default Expression toDouble() {
+        return cast(Type.DOUBLE_TYPE);
+    }
+
+    default Expression cast(final Type targetType) {
+        return CastExpression.of(this, targetType);
+    }
+
     default Expression bop(final String operation, final Expression rhs) {
         return BinaryExpression.of(this, rhs, operation);
     }
