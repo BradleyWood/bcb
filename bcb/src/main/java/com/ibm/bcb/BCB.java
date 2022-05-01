@@ -190,19 +190,19 @@ public class BCB {
     }
 
     public static Expression call(Method method, Expression... arguments) {
-        throw new UnsupportedOperationException();
+        return call(Type.getType(method.getDeclaringClass()), method.getName(), arguments);
     }
 
     public static Expression call(String intrinsic, Expression... arguments) {
         throw new UnsupportedOperationException();
     }
 
-    public static Expression call(String clazz, String method, Expression... arguments) {
-        throw new UnsupportedOperationException();
+    public static Expression call(Type clazz, String method, Expression... arguments) {
+        return call(clazz.getInternalName(), method, arguments);
     }
 
-    public static Expression call(String clazz, String method, String desc, Expression... arguments) {
-        throw new UnsupportedOperationException();
+    public static Expression call(String clazz, String method, Expression... arguments) {
+        return CallExpression.of(clazz, method, arguments);
     }
 
     public static Expression call(int opcode, String clazz, String method, String desc, Expression... arguments) {

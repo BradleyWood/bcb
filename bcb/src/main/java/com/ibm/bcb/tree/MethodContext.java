@@ -84,6 +84,35 @@ public @Data class MethodContext {
         scope.pop();
     }
 
+    public Method findMethod(final String declaringClass, final String name, final Type... argTypes) {
+        try {
+            final Class<?> decl = Class.forName(declaringClass.replace("/", "."));
+
+            outer:
+            for (final java.lang.reflect.Method method : decl.getMethods()) {
+                if (method.getName().equals(name)) {
+                    final Class<?>[] parameterTypes = method.getParameterTypes();
+
+                    if (parameterTypes.length == argTypes.length) {
+                        for (int i = 0; i < argTypes.length; i++) {
+                            if (!Type.getType(parameterTypes[i]).equals(argTypes[i]))
+                                continue outer;
+                        }
+
+                        return new Method(declaringClass, name, Type.getType(method), method.getModifiers());
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+
+        return null;
+    }
+
+    public Method findMethod(final String declaringClass, final String name, final List<Type> argTypes) {
+        return findMethod(declaringClass, name, argTypes.toArray(new Type[0]));
+    }
+
     public Field findField(final String declaringClass, final String name) {
         try {
             final Class<?> decl = Class.forName(declaringClass.replace("/", "."));
@@ -150,6 +179,13 @@ public @Data class MethodContext {
     }
 
     public static @Data class Field {
+        private final String declaringClass;
+        private final String name;
+        private final Type type;
+        private final int modifiers;
+    }
+
+    public static @Data class Method {
         private final String declaringClass;
         private final String name;
         private final Type type;

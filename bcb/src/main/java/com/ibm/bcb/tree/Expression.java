@@ -73,4 +73,12 @@ public interface Expression extends Statement {
     default Expression bop(final String operation, final Expression rhs) {
         return BinaryExpression.of(this, rhs, operation);
     }
+
+    default Expression call(String name, Expression... args) {
+        return CallExpression.of(this, name, args);
+    }
+
+    default Expression asString() {
+        return CallExpression.of(this.cast(Type.getType(Object.class)), "toString");
+    }
 }
