@@ -189,6 +189,14 @@ public class BCB {
         throw new UnsupportedOperationException();
     }
 
+    public static Statement whileLoop(final Expression condition, final Statement... body) {
+        return fori(null, condition, null, body);
+    }
+
+    public static Statement fori(final Expression init, final Expression condition, final Expression after, final Statement... body) {
+        return ForStatement.of(init, condition, after, block(body));
+    }
+
     public static Expression call(Method method, Expression... arguments) {
         return call(Type.getType(method.getDeclaringClass()), method.getName(), arguments);
     }
