@@ -73,12 +73,16 @@ public class BCB {
         throw new UnsupportedOperationException();
     }
 
+    public static Expression load(Type owner, String var) {
+        return load(owner.getInternalName(), var);
+    }
+
     public static Expression load(String var) {
         return LoadExpression.of(var);
     }
 
     public static Expression load(String clazz, String var) {
-        throw new UnsupportedOperationException();
+        return LoadExpression.of(clazz, var, null, null);
     }
 
     public static Expression load(Expression instance, String var) {
@@ -89,12 +93,16 @@ public class BCB {
         return StoreExpression.of(var, value);
     }
 
+    public static Expression store(Type owner, String var, Expression value) {
+        return store(owner.getInternalName(), var, value);
+    }
+
     public static Expression store(String clazz, String name, Expression value) {
-        throw new UnsupportedOperationException();
+        return StoreExpression.of(clazz, name, null, value);
     }
 
     public static Expression store(Expression instance, String name, Expression value) {
-        throw new UnsupportedOperationException();
+        return StoreExpression.of(null, name, instance, value);
     }
 
     public static Expression store(int var, Expression value) {

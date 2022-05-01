@@ -5,7 +5,8 @@ import lombok.EqualsAndHashCode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.PUTSTATIC;
 
 @EqualsAndHashCode
 @Data(staticConstructor = "of")
@@ -18,6 +19,12 @@ public class StoreExpression implements Expression {
 
     @Override
     public Type getType(final MethodContext ctx) {
+        if (declaringClass != null) {
+            return ctx.findField(declaringClass, varName).getType();
+        } else if (instance != null) {
+            return ctx.findField(instance.getType(ctx).getInternalName(), varName).getType();
+        }
+
         return value.getType(ctx);
     }
 
@@ -29,7 +36,6 @@ public class StoreExpression implements Expression {
             instance.evaluate(ctx, mv);
         }
 
-        value.evaluate(ctx, mv);
 
         if (instance == null && declaringClass == null) {
             MethodContext.Var var = ctx.findVar(varName);
@@ -39,15 +45,18 @@ public class StoreExpression implements Expression {
                 var = ctx.findVar(varName);
             }
 
+            value.evaluate(ctx, mv);
             TypeOperations.store(resultType, var.getIndex(), mv);
         } else if (instance == null) {
-            mv.visitFieldInsn(PUTSTATIC, declaringClass, varName, resultType.getInternalName());
+            value.evaluate(ctx, mv);
+            mv.visitFieldInsn(PUTSTATIC, declaringClass, varName, resultType.getDescriptor());
         } else {
             instance.evaluate(ctx, mv);
-            mv.visitFieldInsn(PUTFIELD, declaringClass, varName, resultType.getInternalName());
+            value.evaluate(ctx, mv);
+            mv.visitFieldInsn(PUTFIELD, instance.getType(ctx).getInternalName(), varName, resultType.getDescriptor());
         }
 
-        return resultType;
+        return Type.VOID_TYPE;
     }
 
     public static StoreExpression of(final String varName, final Expression expression) {

@@ -1,15 +1,14 @@
 package com.ibm.bcb.tree;
 
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
 
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
@@ -85,6 +84,17 @@ public @Data class MethodContext {
         scope.pop();
     }
 
+    public Field findField(final String declaringClass, final String name) {
+        try {
+            final Class<?> decl = Class.forName(declaringClass.replace("/", "."));
+            final java.lang.reflect.Field field = decl.getField(name);
+
+            return new Field(declaringClass, name, Type.getType(field.getType()), field.getModifiers());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public boolean putVar(final String name, final Type type, final int modifiers) {
         return putVar(name, type, modifiers, false);
     }
@@ -136,6 +146,13 @@ public @Data class MethodContext {
         private final Type type;
         private final int scope;
         private final int index;
+        private final int modifiers;
+    }
+
+    public static @Data class Field {
+        private final String declaringClass;
+        private final String name;
+        private final Type type;
         private final int modifiers;
     }
 }

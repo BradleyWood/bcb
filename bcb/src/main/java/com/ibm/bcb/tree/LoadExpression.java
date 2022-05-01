@@ -21,6 +21,8 @@ public class LoadExpression implements Expression {
     public Type getType(final MethodContext ctx) {
         if (type != null) {
             return Type.getType(type);
+        } else if (declaringClass != null) {
+            return ctx.findField(declaringClass, varName).getType();
         }
 
         return ctx.findVar(varName).getType();
@@ -33,10 +35,10 @@ public class LoadExpression implements Expression {
         if (instance == null && declaringClass == null) {
             TypeOperations.load(resultType, ctx.findVar(varName).getIndex(), mv);
         } else if (instance == null) {
-            mv.visitFieldInsn(GETSTATIC, declaringClass, varName, resultType.getInternalName());
+            mv.visitFieldInsn(GETSTATIC, declaringClass, varName, resultType.getDescriptor());
         } else {
             instance.evaluate(ctx, mv);
-            mv.visitFieldInsn(GETFIELD, declaringClass, varName, resultType.getInternalName());
+            mv.visitFieldInsn(GETFIELD, declaringClass, varName, resultType.getDescriptor());
         }
 
         return resultType;
