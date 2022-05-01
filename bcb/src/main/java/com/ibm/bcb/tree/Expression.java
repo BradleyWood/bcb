@@ -66,6 +66,10 @@ public interface Expression extends Statement {
         return cast(Type.DOUBLE_TYPE);
     }
 
+    default Expression cast(final Class<?> targetType) {
+        return CastExpression.of(this, Type.getType(targetType));
+    }
+
     default Expression cast(final Type targetType) {
         return CastExpression.of(this, targetType);
     }

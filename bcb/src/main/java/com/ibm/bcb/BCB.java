@@ -73,6 +73,10 @@ public class BCB {
         throw new UnsupportedOperationException();
     }
 
+    public static Expression load(Class<?> owner, String var) {
+        return load(Type.getType(owner), var);
+    }
+
     public static Expression load(Type owner, String var) {
         return load(owner.getInternalName(), var);
     }
@@ -162,7 +166,7 @@ public class BCB {
     }
 
     public static Expression toString(Expression expression) {
-        throw new UnsupportedOperationException();
+        return CallExpression.of(expression.cast(Object.class), "toString");
     }
 
     public static Expression print(Expression expression) {
@@ -170,7 +174,7 @@ public class BCB {
     }
 
     public static Expression println(Expression expression) {
-        throw new UnsupportedOperationException();
+        return call("println", expression);
     }
 
     public static Expression rem(Expression lhs, Expression rhs) {
@@ -215,10 +219,6 @@ public class BCB {
 
     public static Expression call(String clazz, String method, Expression... arguments) {
         return CallExpression.of(clazz, method, arguments);
-    }
-
-    public static Expression call(int opcode, String clazz, String method, String desc, Expression... arguments) {
-        throw new UnsupportedOperationException();
     }
 
     public static Expression add(Expression lhs, Expression rhs) {
