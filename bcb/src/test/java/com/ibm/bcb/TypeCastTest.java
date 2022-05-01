@@ -202,4 +202,62 @@ public class TypeCastTest {
 
         assertEquals(5.0, (double) handle.invoke(5L), 0.0001);
     }
+
+    @Test
+    @SneakyThrows
+    public void testI2Object() {
+        BCBMethod method = BCBMethod.builder()
+                .name("Test")
+                .declaringClass("TestClass")
+                .returnType(Type.getType(Object.class))
+                .arg("a", Type.INT_TYPE)
+                .body(
+                        ret(
+                                load("a").cast(Type.getType(Object.class))
+                        )
+                ).build();
+
+        final MethodHandle handle = method.toMethodHandle();
+
+        assertEquals(5, handle.invoke(5));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testD2Object() {
+        BCBMethod method = BCBMethod.builder()
+                .name("Test")
+                .declaringClass("TestClass")
+                .returnType(Type.getType(Object.class))
+                .arg("a", Type.DOUBLE_TYPE)
+                .body(
+                        ret(
+                                load("a").cast(Type.getType(Object.class))
+                        )
+                ).build();
+
+        final MethodHandle handle = method.toMethodHandle();
+
+        assertEquals(5.0, handle.invoke(5.0));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testStr2Object() {
+        BCBMethod method = BCBMethod.builder()
+                .name("Test")
+                .declaringClass("TestClass")
+                .returnType(Type.getType(Object.class))
+                .arg("a", Type.getType(String.class))
+                .body(
+                        ret(
+                                load("a").cast(Type.getType(Object.class))
+                        )
+                ).build();
+
+        final MethodHandle handle = method.toMethodHandle();
+
+        assertEquals("Hello, World!", handle.invoke("Hello, World!"));
+    }
+
 }

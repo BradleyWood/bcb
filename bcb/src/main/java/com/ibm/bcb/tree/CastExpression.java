@@ -26,21 +26,32 @@ public class CastExpression implements Expression {
         final Primitive ep = Primitive.byType(expressionType);
         final Primitive tp = Primitive.byType(targetType);
 
+        expression.evaluate(ctx, mv);
+
         if (ep == null && tp == null) {
             // todo: check if this cast is guaranteed to fail
-            mv.visitTypeInsn(CHECKCAST, targetType.getInternalName());
-        } else if (ep == null || tp == null) {
-            throw new IllegalStateException("Cast is guaranteed to fail");
+            if (!targetType.equals(Type.getType(Object.class)))
+                mv.visitTypeInsn(CHECKCAST, targetType.getInternalName());
+        } else if (ep != null && tp == null) {
+            if (targetType.equals(Type.getType(Number.class)) || targetType.equals(Type.getType(Object.class))) {
+                ep.box(mv);
+            } else {
+                throw new IllegalStateException("Cannot cast primitive to type: " + targetType.getInternalName());
+            }
+        } else if (ep == null) {
+            throw new IllegalStateException("Cannot cast non-primitive type " + expressionType.getInternalName() +
+                    " to type " + targetType.getInternalName());
         } else {
-            expression.evaluate(ctx, mv);
-
             if (Primitive.getBoxed(expressionType) != null) {
+                // This is a wrapped primitive value (such as Integer)
+                // Unbox to its primitive type
                 ep.unbox(mv);
             }
 
             ep.cast(mv, tp);
 
             if (Primitive.getBoxed(targetType) != null) {
+                // The target type is a wrapper primitive
                 tp.box(mv);
             }
         }
