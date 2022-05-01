@@ -122,7 +122,7 @@ public class BCB {
     }
 
     public static Expression sqrt(Expression expression) {
-        throw new UnsupportedOperationException();
+        return call("sqrt", expression);
     }
 
     public static Expression not(Expression expression) {
@@ -202,7 +202,11 @@ public class BCB {
     }
 
     public static Expression call(String intrinsic, Expression... arguments) {
-        throw new UnsupportedOperationException();
+        return CallExpression.of(null, null, intrinsic, arguments);
+    }
+
+    public static Expression call(Class<?> clazz, String method, Expression... arguments) {
+        return call(Type.getType(clazz), method, arguments);
     }
 
     public static Expression call(Type clazz, String method, Expression... arguments) {

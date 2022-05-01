@@ -1,9 +1,11 @@
 package com.ibm.bcb.tree;
 
+import com.ibm.bcb.BCBMethod;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -17,7 +19,7 @@ import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 @Data
 @EqualsAndHashCode
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "of")
 public class CallExpression implements Expression {
 
     private final Expression proceedingExpression;
@@ -68,18 +70,46 @@ public class CallExpression implements Expression {
             throw new IllegalStateException("Cannot call non-static method from a static context");
         }
 
-        if (proceedingExpression != null) {
-            proceedingExpression.evaluate(ctx, mv);
-        }
+        if (method.isIntrinsic() && method.isInline()) {
+            ctx.beginScope();
 
-        for (final Expression arg : args) {
-            arg.evaluate(ctx, mv);
-        }
+            final BCBMethod intrinsic = ctx.findIntrinsic(name, method.getType().getArgumentTypes());
+            final List<String> argNames = intrinsic.getArgNames();
 
-        if (Modifier.isStatic(method.getModifiers())) {
-            mv.visitMethodInsn(INVOKESTATIC, method.getDeclaringClass(), name, method.getType().getDescriptor());
+            for (int i = 0; i < args.length; i++) {
+                StoreExpression.of(argNames.get(i), args[i]).evaluate(ctx, mv);
+            }
+
+            final Label inlineMethodEnd = new Label();
+            final Label currentMethodEnd = ctx.getMethodEnd();
+            final boolean isInline = ctx.isInlineMethod();
+
+            ctx.setMethodEnd(inlineMethodEnd);
+            ctx.setInlineMethod(true);
+
+            for (final Statement statement : intrinsic.getStatements()) {
+                statement.evaluate(ctx, mv);
+            }
+
+            ctx.setInlineMethod(isInline);
+            mv.visitLabel(inlineMethodEnd);
+            ctx.setMethodEnd(currentMethodEnd);
+
+            ctx.endScope();
         } else {
-            mv.visitMethodInsn(INVOKEVIRTUAL, method.getDeclaringClass(), name, method.getType().getDescriptor());
+            if (proceedingExpression != null) {
+                proceedingExpression.evaluate(ctx, mv);
+            }
+
+            for (final Expression arg : args) {
+                arg.evaluate(ctx, mv);
+            }
+
+            if (Modifier.isStatic(method.getModifiers())) {
+                mv.visitMethodInsn(INVOKESTATIC, method.getDeclaringClass(), name, method.getType().getDescriptor());
+            } else {
+                mv.visitMethodInsn(INVOKEVIRTUAL, method.getDeclaringClass(), name, method.getType().getDescriptor());
+            }
         }
 
         return method.getType().getReturnType();

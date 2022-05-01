@@ -51,4 +51,27 @@ public class CallTest {
         handle.invoke(ps);
         Assert.assertEquals("100" + System.lineSeparator(), baos.toString());
     }
+
+    @Test
+    @SneakyThrows
+    public void testIntrinsic() {
+        final BCBMethod method = BCBMethod.builder()
+                .name("Test")
+                .declaringClass("TestClass")
+                .returnType(Type.DOUBLE_TYPE)
+                .arg("x", Type.DOUBLE_TYPE)
+                .body(
+                        ret(
+                                call(
+                                        "sqrt",
+                                        load("x")
+                                )
+                        )
+                ).build();
+
+        final MethodHandle handle = method.toMethodHandle();
+
+        Assert.assertEquals(4.0, (double) handle.invoke(16.0), 0.0001);
+        Assert.assertEquals(10.0, (double) handle.invoke(100.0), 0.0001);
+    }
 }

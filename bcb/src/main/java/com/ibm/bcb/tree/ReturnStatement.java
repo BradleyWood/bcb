@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import static org.objectweb.asm.Opcodes.GOTO;
+
 @EqualsAndHashCode
 @Data(staticConstructor = "of")
 public class ReturnStatement implements Statement {
@@ -15,7 +17,11 @@ public class ReturnStatement implements Statement {
     public Type evaluate(final MethodContext ctx, final MethodVisitor mv) {
         final Type resultType = result != null ? result.evaluate(ctx, mv) : Type.VOID_TYPE;
 
-        TypeOperations.ret(resultType, mv);
+        if (ctx.isInlineMethod()) {
+            mv.visitJumpInsn(GOTO, ctx.getMethodEnd());
+        } else {
+            TypeOperations.ret(resultType, mv);
+        }
 
         return Type.VOID_TYPE;
     }

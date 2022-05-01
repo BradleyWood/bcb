@@ -1,7 +1,10 @@
 package com.ibm.bcb.tree;
 
+import com.ibm.bcb.BCBMethod;
+import com.ibm.bcb.Intrinsics;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Modifier;
@@ -21,34 +24,37 @@ public @Data class MethodContext {
     private final Type declaringClass;
     private final Type methodType;
     private final List<String> argNames;
+    private Label methodEnd;
     private int modifiers;
+    private boolean inlineMethod;
 
     public MethodContext() {
         this("<AnonymousMethod>");
     }
 
     public MethodContext(final String name) {
-        this(null, name, Type.getMethodType(Type.VOID_TYPE));
+        this(null, name, Type.getMethodType(Type.VOID_TYPE), null);
     }
 
-    public MethodContext(final Type declaringClass, final String name, final Type type, final String... argNames) {
-        this(declaringClass, name, type, Arrays.asList(argNames));
+    public MethodContext(final Type declaringClass, final String name, final Type type, Label methodEnd, final String... argNames) {
+        this(declaringClass, name, type, Arrays.asList(argNames), methodEnd);
     }
 
-    public MethodContext(final Type declaringClass, final String name, final Type type, final List<String> argNames) {
-        this(declaringClass, name, ACC_PUBLIC + ACC_STATIC, type, argNames);
+    public MethodContext(final Type declaringClass, final String name, final Type type, final List<String> argNames, Label methodEnd) {
+        this(declaringClass, name, ACC_PUBLIC + ACC_STATIC, type, argNames, methodEnd);
     }
 
-    public MethodContext(final Type declaringClass, final String name, int modifiers, final Type type, final String... argNames) {
-        this(declaringClass, name, modifiers, type, Arrays.asList(argNames));
+    public MethodContext(final Type declaringClass, final String name, int modifiers, final Type type, Label methodEnd, final String... argNames) {
+        this(declaringClass, name, modifiers, type, Arrays.asList(argNames), methodEnd);
     }
 
-    public MethodContext(final Type declaringClass, final String name, int modifiers, final Type type, final List<String> argNames) {
+    public MethodContext(final Type declaringClass, final String name, int modifiers, final Type type, final List<String> argNames, Label methodEnd) {
         this.declaringClass = declaringClass;
         this.name = name;
         this.modifiers = modifiers;
         this.methodType = type;
         this.argNames = argNames;
+        this.methodEnd = methodEnd;
 
         final Type[] argumentTypes = type.getArgumentTypes();
 
@@ -84,7 +90,26 @@ public @Data class MethodContext {
         scope.pop();
     }
 
+    public BCBMethod findIntrinsic(final String name, final Type... argTypes) {
+        for (final BCBMethod intrinsic : Intrinsics.GLOBAL_INTRINSICS) {
+            if (intrinsic.getName().equals(name)) {
+                if (intrinsic.getArgTypes().equals(Arrays.asList(argTypes))) {
+                    return intrinsic;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public Method findMethod(final String declaringClass, final String name, final Type... argTypes) {
+        if (declaringClass == null) {
+            final BCBMethod intrinsic = findIntrinsic(name, argTypes);
+
+            return new Method(intrinsic.getDeclaringClass(), name, intrinsic.getMethodType(),
+                    intrinsic.getModifiers(), true, intrinsic.isInline());
+        }
+
         try {
             final Class<?> decl = Class.forName(declaringClass.replace("/", "."));
 
@@ -99,7 +124,7 @@ public @Data class MethodContext {
                                 continue outer;
                         }
 
-                        return new Method(declaringClass, name, Type.getType(method), method.getModifiers());
+                        return new Method(declaringClass, name, Type.getType(method), method.getModifiers(), false, false);
                     }
                 }
             }
@@ -190,5 +215,7 @@ public @Data class MethodContext {
         private final String name;
         private final Type type;
         private final int modifiers;
+        private final boolean isIntrinsic;
+        private final boolean inline;
     }
 }

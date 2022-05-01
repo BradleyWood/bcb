@@ -1,8 +1,11 @@
 package com.ibm.bcb;
 
-import com.ibm.bcb.tree.*;
+import com.ibm.bcb.tree.Block;
+import com.ibm.bcb.tree.MethodContext;
+import com.ibm.bcb.tree.Statement;
 import lombok.*;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -31,6 +34,9 @@ public @Data class BCBMethod {
 
     @Builder.Default
     private final Type returnType = Type.VOID_TYPE;
+
+    @Builder.Default
+    private final boolean inline = false;
 
     @Builder.Default
     private final String declaringClass = "AnonymousClass";
@@ -85,12 +91,19 @@ public @Data class BCBMethod {
         final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, declaringClass, null, "java/lang/Object", null);
 
+        final Label methodEnd = new Label();
         final MethodVisitor mv = cw.visitMethod(modifiers, name, getMethodType().getDescriptor(), null, null);
         final Type clazzType = Type.getType("L" + declaringClass + ";");
-        final MethodContext ctx = new MethodContext(clazzType, name, ACC_PUBLIC + ACC_STATIC, getMethodType(), argNames);
+        final MethodContext ctx = new MethodContext(clazzType, name, ACC_PUBLIC + ACC_STATIC, getMethodType(), argNames, methodEnd);
 
         Block.of(statements).evaluate(ctx, mv);
-        ctx.endScope();
+
+        mv.visitLabel(methodEnd);
+
+        for (final String argName : argNames) {
+            mv.visitParameter(argName, 0);
+        }
+
         mv.visitMaxs(0, 0);
         mv.visitEnd();
 
