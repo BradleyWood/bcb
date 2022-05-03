@@ -1,5 +1,6 @@
 package com.ibm.bcb.tree;
 
+import com.ibm.bcb.Var;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.objectweb.asm.MethodVisitor;
@@ -38,7 +39,7 @@ public class StoreExpression implements Expression {
 
 
         if (instance == null && declaringClass == null) {
-            MethodContext.Var var = ctx.findVar(varName);
+            Var var = ctx.findVar(varName);
 
             if (var == null) {
                 ctx.putVar(varName, resultType, 0);

@@ -1,7 +1,6 @@
 package com.ibm.bcb.tree;
 
-import com.ibm.bcb.BCBMethod;
-import com.ibm.bcb.Intrinsics;
+import com.ibm.bcb.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.objectweb.asm.Label;
@@ -102,19 +101,37 @@ public @Data class MethodContext {
         return null;
     }
 
-    public Method findMethod(final String declaringClass, final String name, final Type... argTypes) {
-        if (declaringClass == null) {
-            final BCBMethod intrinsic = findIntrinsic(name, argTypes);
+    public MethodRef findIntrinsicMethod(final String name, final Type... argTypes) {
+        for (final BCBMethod intrinsic : Intrinsics.GLOBAL_INTRINSICS) {
+            if (intrinsic.getName().equals(name)) {
+                if (intrinsic.getArgTypes().equals(Arrays.asList(argTypes))) {
+                    return MethodRef.of(intrinsic.getDeclaringClass(), name, intrinsic.getMethodType(),
+                            intrinsic.getModifiers(), true, intrinsic.isInline());
+                }
+            }
+        }
 
-            return new Method(intrinsic.getDeclaringClass(), name, intrinsic.getMethodType(),
-                    intrinsic.getModifiers(), true, intrinsic.isInline());
+        for (final MethodRef builtin : Intrinsics.BUILTINS) {
+            if (builtin.getName().equals(name)) {
+                if (Arrays.equals(builtin.getType().getArgumentTypes(), argTypes)) {
+                    return builtin;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public MethodRef findMethod(final String declaringClass, final String name, final Type... argTypes) {
+        if (declaringClass == null) {
+            return findIntrinsicMethod(name, argTypes);
         }
 
         try {
             final Class<?> decl = Class.forName(declaringClass.replace("/", "."));
 
             outer:
-            for (final java.lang.reflect.Method method : decl.getMethods()) {
+            for (final java.lang.reflect.Method method : decl.getDeclaredMethods()) {
                 if (method.getName().equals(name)) {
                     final Class<?>[] parameterTypes = method.getParameterTypes();
 
@@ -124,7 +141,7 @@ public @Data class MethodContext {
                                 continue outer;
                         }
 
-                        return new Method(declaringClass, name, Type.getType(method), method.getModifiers(), false, false);
+                        return MethodRef.of(declaringClass, name, Type.getType(method), method.getModifiers(), false, false);
                     }
                 }
             }
@@ -134,7 +151,7 @@ public @Data class MethodContext {
         return null;
     }
 
-    public Method findMethod(final String declaringClass, final String name, final List<Type> argTypes) {
+    public MethodRef findMethod(final String declaringClass, final String name, final List<Type> argTypes) {
         return findMethod(declaringClass, name, argTypes.toArray(new Type[0]));
     }
 
@@ -193,29 +210,5 @@ public @Data class MethodContext {
 
     public void clear() {
         scope.clear();
-    }
-
-    public static @Data class Var {
-        private final String name;
-        private final Type type;
-        private final int scope;
-        private final int index;
-        private final int modifiers;
-    }
-
-    public static @Data class Field {
-        private final String declaringClass;
-        private final String name;
-        private final Type type;
-        private final int modifiers;
-    }
-
-    public static @Data class Method {
-        private final String declaringClass;
-        private final String name;
-        private final Type type;
-        private final int modifiers;
-        private final boolean isIntrinsic;
-        private final boolean inline;
     }
 }

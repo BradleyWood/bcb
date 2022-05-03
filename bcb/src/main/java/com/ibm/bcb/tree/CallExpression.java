@@ -1,6 +1,7 @@
 package com.ibm.bcb.tree;
 
 import com.ibm.bcb.BCBMethod;
+import com.ibm.bcb.MethodRef;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,7 +42,7 @@ public class CallExpression implements Expression {
         this.args = args;
     }
 
-    private MethodContext.Method findMethod(final MethodContext ctx) {
+    private MethodRef findMethod(final MethodContext ctx) {
         final List<Type> argTypes = Arrays.stream(args).map(a -> a.getType(ctx)).collect(Collectors.toList());
 
         if (proceedingExpression != null) {
@@ -60,7 +61,7 @@ public class CallExpression implements Expression {
     @Override
     @SneakyThrows
     public Type evaluate(final MethodContext ctx, final MethodVisitor mv) {
-        final MethodContext.Method method = findMethod(ctx);
+        final MethodRef method = findMethod(ctx);
 
         if (method == null) {
             throw new NoSuchMethodException(name);
