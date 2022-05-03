@@ -1,12 +1,8 @@
 package com.ibm.bcb;
 
 import com.ibm.bcb.tree.Block;
-import com.ibm.bcb.tree.MethodContext;
 import com.ibm.bcb.tree.Statement;
 import lombok.*;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import java.io.File;
@@ -17,7 +13,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
 
 @Builder
 @AllArgsConstructor
@@ -87,46 +84,19 @@ public @Data class BCBMethod {
         return Type.getMethodType(returnType, argTypes.toArray(new Type[0]));
     }
 
-    public byte[] toByteArray() {
-        final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, declaringClass, null, "java/lang/Object", null);
-
-        final Label methodEnd = new Label();
-        final MethodVisitor mv = cw.visitMethod(modifiers, name, getMethodType().getDescriptor(), null, null);
-        final Type clazzType = Type.getType("L" + declaringClass + ";");
-        final MethodContext ctx = new MethodContext(clazzType, name, ACC_PUBLIC + ACC_STATIC, getMethodType(), argNames, methodEnd);
-
-        Block.of(statements).evaluate(ctx, mv);
-
-        mv.visitLabel(methodEnd);
-
-        for (final String argName : argNames) {
-            mv.visitParameter(argName, 0);
-        }
-
-        mv.visitMaxs(0, 0);
-        mv.visitEnd();
-
-        cw.visitEnd();
-        return cw.toByteArray();
+    private byte[] toByteArray() {
+        return BCBClass.builder()
+                .name(declaringClass)
+                .method(this)
+                .build().toByteArray();
     }
 
     @SneakyThrows
     private Class<?> loadClass() {
-        final byte[] bytes = toByteArray();
-
-        final ClassLoader loader = new ClassLoader() {
-            @Override
-            protected Class<?> findClass(final String name) {
-                if (name.equals(declaringClass.replace("/", "."))) {
-                    return defineClass(name, bytes, 0, bytes.length);
-                }
-
-                return null;
-            }
-        };
-
-        return loader.loadClass(declaringClass.replace("/", "."));
+        return BCBClass.builder()
+                .name(declaringClass)
+                .method(this)
+                .build().loadClass();
     }
 
     @SneakyThrows
